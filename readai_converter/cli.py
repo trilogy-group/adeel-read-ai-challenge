@@ -28,7 +28,8 @@ def validate_input_args(
         )
         sys.exit(1)
     
-    if not input_dir and not all([json_file, transcript_file, video_file]):
+    # Only require JSON and transcript files, video is optional
+    if not input_dir and not all([json_file, transcript_file]):
         console.print(
             "[red]Error:[/red] Must specify either input directory or all individual files"
         )
