@@ -7,6 +7,7 @@ from typing import Optional, Protocol
 
 from .config import ConversionConfig, OutputFormat
 from .markdown_generator import MarkdownGenerator
+from .pdf_generator import PdfGenerator
 import re
 
 
@@ -177,21 +178,32 @@ class MeetingConverter:
             self._notify_progress('convert', 0.3, 'Generating Markdown')
             generator = MarkdownGenerator(
                 title=data['title'],
-                start_time=data['start_time'],
+                start_time=self.start_time,
                 end_time=data['end_time'],
                 participants=data['participants'],
                 summary=data['summary'],
                 transcript=transcript,
-                timestamp_format=self.config.timestamp_format.value
+                timestamp_format=self.config.timestamp_format
             )
             
             md_path = self.config.output_dir / f"{data['title']}.md"
-            with open(md_path, 'w', encoding='utf-8') as f:
-                f.write(generator.generate())
-                
+            content = generator.generate()
+            md_path.write_text(content, encoding='utf-8')
+            
         # Generate PDF
         if self.config.output_format in [OutputFormat.PDF, OutputFormat.BOTH]:
             self._notify_progress('convert', 0.6, 'Generating PDF')
-            # TODO: Implement PDF generation
+            generator = PdfGenerator(
+                title=data['title'],
+                start_time=self.start_time,
+                end_time=data['end_time'],
+                participants=data['participants'],
+                summary=data['summary'],
+                transcript=transcript,
+                timestamp_format=self.config.timestamp_format
+            )
+            
+            pdf_path = self.config.output_dir / f"{data['title']}.pdf"
+            generator.generate(pdf_path)
             
         self._notify_progress('convert', 1.0, 'Conversion complete')
