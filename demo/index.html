@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Playback</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+        .video-container {
+            width: 100%;
+            max-height: 100%;
+        }
+        video {
+            width: 100%;
+            max-height: 100%;
+            background: #000;
+        }
+        .transcript {
+            border-left: 1px solid #ccc;
+            padding-left: 20px;
+            overflow-y: auto;
+            height: 100%;
+            padding-right: 20px;
+        }
+        #meeting-details {
+            margin-bottom: 30px;
+        }
+        #meeting-details h2 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        #meeting-details h3 {
+            color: #34495e;
+            margin-top: 25px;
+        }
+        #meeting-details p {
+            line-height: 1.6;
+        }
+        #meeting-details ul {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        #meeting-details li {
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="video-container">
+            <video controls preload="metadata">
+                <source src="meeting.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <div class="transcript">
+            <div id="meeting-details"></div>
+            <div id="transcript-content"></div>
+        </div>
+        <script>
+            // Load and display meeting data
+            fetch('event.json')
+                .then(response => response.json())
+                .then(data => {
+                    const detailsHtml = `
+                        <h2>${data.title}</h2>
+                        <p><strong>Date:</strong> ${new Date(data.start_time).toLocaleString()}</p>
+                        <p><strong>Duration:</strong> ${Math.round((new Date(data.end_time) - new Date(data.start_time)) / 60000)} minutes</p>
+                        <p><strong>Participants:</strong></p>
+                        <ul>
+                            ${data.participants.map(p => `<li>${p.name}</li>`).join('')}
+                        </ul>
+                        <h3>Summary</h3>
+                        <p>${data.summary}</p>
+                        <h3>Action Items</h3>
+                        <ul>
+                            ${data.action_items.map(item => `<li>${item.text}</li>`).join('')}
+                        </ul>
+                    `;
+                    document.getElementById('meeting-details').innerHTML = detailsHtml;
+                })
+                .catch(error => console.error('Error loading meeting data:', error));
+        </script>
+    </div>
+    <script>
+        // Will add transcript loading and syncing here
+        console.log('Video player initialized');
+    </script>
+</body>
+</html>
