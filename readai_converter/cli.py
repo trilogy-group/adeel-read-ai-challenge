@@ -7,8 +7,10 @@ from typing import Optional
 import click
 from rich.console import Console
 from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
 
 from .config import ConversionConfig, OutputFormat, TimestampFormat
+from .processor import MeetingConverter
 
 console = Console()
 
@@ -86,11 +88,11 @@ def main(
     transcript_file: Optional[Path],
     video_file: Optional[Path],
     output_dir: Path,
-    output_format: str,
-    timestamp_format: str,
-    include_extras: bool,
+    output_format: str = "both",
+    timestamp_format: str = "minutes",
+    include_extras: bool = True,
 ) -> None:
-    """Convert Read.AI meeting data to structured document formats."""
+    """Convert Read.AI meeting data to structured documents."""
     # Show welcome message
     console.print(
         Panel.fit(
@@ -115,13 +117,61 @@ def main(
     )
     
     # Validate configuration
-    if errors := config.validate():
+    errors = config.validate()
+    if errors:
+        console.print("\n[red]Validation errors:[/red]")
         for error in errors:
-            console.print(f"[red]Error:[/red] {error}")
+            console.print(f"  • {error}")
         sys.exit(1)
+
+    # Create output directory if it doesn't exist
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create progress display
+    progress = Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TaskProgressColumn(),
+        console=console,
+    )
+
+    # Run conversion with progress display
+    with progress:
+        # Add progress tasks
+        tasks = {
+            'json': progress.add_task("[cyan]Loading JSON...", total=100),
+            'transcript': progress.add_task("[cyan]Loading transcript...", total=100),
+            'convert': progress.add_task("[cyan]Converting...", total=100)
+        }
+
+        try:
+            # Create converter with progress callback using tasks
+            converter = MeetingConverter(
+                config=config,
+                callback=lambda stage, prog, msg, details: update_progress(progress, tasks, stage, prog, msg)
+            )
+            
+            # Run conversion
+            converter.convert()
+            console.print("\n[green]✓[/green] Conversion complete!")
+        except Exception as e:
+            console.print(f"\n[red]Error:[/red] {str(e)}")
+            sys.exit(1)
+
+
+def update_progress(progress: Progress, tasks: dict, stage: str, prog: float, msg: str) -> None:
+    """Update progress display for a stage.
     
-    # TODO: Initialize and run the converter
-    console.print("[green]Configuration validated successfully![/green]")
+    Args:
+        progress: Progress display instance
+        tasks: Dictionary of task IDs by stage
+        stage: Current stage identifier
+        prog: Progress value (0-1)
+        msg: Status message
+    """
+    if stage in tasks:
+        progress.update(tasks[stage], completed=prog * 100, description=f"[cyan]{msg}")
 
 
 if __name__ == "__main__":
