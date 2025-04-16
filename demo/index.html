@@ -54,6 +54,36 @@
             margin: 5px 0;
             line-height: 1.4;
         }
+        .error-message {
+            background: #fff3f3;
+            border: 1px solid #ffcdd2;
+            border-radius: 4px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .error-message h2 {
+            color: #d32f2f;
+            margin-top: 0;
+        }
+        .error-message code {
+            background: #ffebee;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .error-message ol {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        .error-message li {
+            margin: 8px 0;
+        }
+        .error-message a {
+            color: #1976d2;
+            text-decoration: none;
+        }
+        .error-message a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -68,34 +98,85 @@
             <div id="meeting-details"></div>
             <div id="transcript-content"></div>
         </div>
-        <script>
-            // Load and display meeting data
-            fetch('event.json')
-                .then(response => response.json())
-                .then(data => {
-                    const detailsHtml = `
-                        <h2>${data.title}</h2>
-                        <p><strong>Date:</strong> ${new Date(data.start_time).toLocaleString()}</p>
-                        <p><strong>Duration:</strong> ${Math.round((new Date(data.end_time) - new Date(data.start_time)) / 60000)} minutes</p>
-                        <p><strong>Participants:</strong></p>
-                        <ul>
-                            ${data.participants.map(p => `<li>${p.name}</li>`).join('')}
-                        </ul>
-                        <h3>Summary</h3>
-                        <p>${data.summary}</p>
-                        <h3>Action Items</h3>
-                        <ul>
-                            ${data.action_items.map(item => `<li>${item.text}</li>`).join('')}
-                        </ul>
-                    `;
-                    document.getElementById('meeting-details').innerHTML = detailsHtml;
-                })
-                .catch(error => console.error('Error loading meeting data:', error));
-        </script>
     </div>
     <script>
-        // Will add transcript loading and syncing here
-        console.log('Video player initialized');
+        // Handle video errors
+        const video = document.querySelector('video');
+        const videoSource = video.querySelector('source');
+        
+        // Check for video load errors
+        videoSource.addEventListener('error', () => {
+            document.querySelector('.transcript').innerHTML = `
+                <div class="error-message">
+                    <h2>⚠️ Video Not Found</h2>
+                    <p>The meeting recording file <code>meeting.mp4</code> is not available.</p>
+                    <p>Please:</p>
+                    <ol>
+                        <li>Download the video from: <a href="https://drive.google.com/file/d/1a9P_2lFY4RdZATZoDpjMQAqK_KLrRRpH/view?usp=sharing" target="_blank">Google Drive</a></li>
+                        <li>Save it as <code>meeting.mp4</code> in this directory</li>
+                        <li>Refresh this page</li>
+                    </ol>
+                </div>
+            `;
+        });
+
+        // Additional check for missing video file
+        fetch(videoSource.src)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Video file not found');
+                }
+            })
+            .catch(() => {
+                document.querySelector('.transcript').innerHTML = `
+                    <div class="error-message">
+                        <h2>⚠️ Video Not Found</h2>
+                        <p>The meeting recording file <code>meeting.mp4</code> is not available.</p>
+                        <p>Please:</p>
+                        <ol>
+                            <li>Download the video from: <a href="https://drive.google.com/file/d/1a9P_2lFY4RdZATZoDpjMQAqK_KLrRRpH/view?usp=sharing" target="_blank">Google Drive</a></li>
+                            <li>Save it as <code>meeting.mp4</code> in this directory</li>
+                            <li>Refresh this page</li>
+                        </ol>
+                    </div>
+                `;
+            });
+
+        // Load and display meeting data
+        fetch('event2.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('JSON file not found');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const detailsHtml = `
+                    <h2>${data.title}</h2>
+                    <p><strong>Date:</strong> ${new Date(data.start_time).toLocaleString()}</p>
+                    <p><strong>Duration:</strong> ${Math.round((new Date(data.end_time) - new Date(data.start_time)) / 60000)} minutes</p>
+                    <p><strong>Participants:</strong></p>
+                    <ul>
+                        ${data.participants.map(p => `<li>${p.name}</li>`).join('')}
+                    </ul>
+                    <h3>Summary</h3>
+                    <p>${data.summary}</p>
+                    <h3>Action Items</h3>
+                    <ul>
+                        ${data.action_items.map(item => `<li>${item.text}</li>`).join('')}
+                    </ul>
+                `;
+                document.getElementById('meeting-details').innerHTML = detailsHtml;
+            })
+            .catch(() => {
+                document.querySelector('.transcript').innerHTML = `
+                    <div class="error-message">
+                        <h2>⚠️ Meeting Data Not Found</h2>
+                        <p>The meeting data file <code>event.json</code> is not available.</p>
+                        <p>Please ensure the file exists in this directory and refresh the page.</p>
+                    </div>
+                `;
+            });
     </script>
 </body>
 </html>
