@@ -95,6 +95,10 @@
             border-radius: 4px;
             padding: 15px;
             transition: background-color 0.3s;
+            cursor: pointer;
+        }
+        .transcript-block:hover {
+            background: #e3f2fd;
         }
         .transcript-block.current {
             background: #e3f2fd;
@@ -200,11 +204,8 @@
         function displayAllTranscripts() {
             if (!transcriptData) return;
             
-            // Clear meeting details when showing transcript
-            document.getElementById('meeting-details').style.display = 'none';
-            
             const blocksHtml = transcriptData.speaker_blocks.map((block, idx) => `
-                <div class="transcript-block" id="transcript-${idx}">
+                <div class="transcript-block" id="transcript-${idx}" onclick="seekToTranscript(${idx})">
                     <p class="speaker">${block.speaker.name}</p>
                     <p class="words">${block.words}</p>
                 </div>
@@ -213,6 +214,8 @@
             document.getElementById('transcript-content').innerHTML = `
                 <div class="transcript-blocks">${blocksHtml}</div>
             `;
+            document.getElementById('transcript-content').style.display = 'none';
+            document.getElementById('meeting-details').style.display = 'block';
         }
 
         function highlightTranscript(index) {
@@ -234,6 +237,12 @@
             currentTranscriptIndex = index;
         }
 
+        // Handle video play/pause events
+        video.addEventListener('play', () => {
+            document.getElementById('meeting-details').style.display = 'none';
+            document.getElementById('transcript-content').style.display = 'block';
+        });
+
         // Handle video timeupdate event
         video.addEventListener('timeupdate', () => {
             const transcriptIndex = findTranscriptAtTime(video.currentTime);
@@ -246,16 +255,27 @@
         video.addEventListener('pause', () => {
             document.getElementById('id_span_paused').style.display = 'inline-block';
             document.getElementById('meeting-details').style.display = 'block';
-            document.getElementById('transcript-content').innerHTML = '';
-            currentTranscriptIndex = -1;
+            document.getElementById('transcript-content').style.display = 'none';
         });
 
         video.addEventListener('ended', () => {
             document.getElementById('id_span_paused').style.display = 'none';
             document.getElementById('meeting-details').style.display = 'block';
-            document.getElementById('transcript-content').innerHTML = '';
+            document.getElementById('transcript-content').style.display = 'none';
             currentTranscriptIndex = -1;
         });
+
+        function seekToTranscript(index) {
+            if (!transcriptData || index < 0 || index >= transcriptData.speaker_blocks.length) return;
+            
+            const block = transcriptData.speaker_blocks[index];
+            const seekTime = Math.max(0, block.start_time - 2); // Go back 2 seconds
+            video.currentTime = seekTime;
+            
+            if (video.paused) {
+                video.play();
+            }
+        }
 
         fetch('event.json')
             .then(response => {
