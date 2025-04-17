@@ -84,6 +84,26 @@
         .error-message a:hover {
             text-decoration: underline;
         }
+        .transcript-block {
+            background: #f8f9fa;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .transcript-block .speaker {
+            color: #2c3e50;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+        }
+        .transcript-block .words {
+            margin: 0;
+            line-height: 1.5;
+        }
+        #id_span_paused {
+            display: none;
+            color: #d32f2f;
+            margin-right: 8px;
+        }
     </style>
 </head>
 <body>
@@ -143,7 +163,71 @@
             });
 
         // Load and display meeting data
-        fetch('event2.json')
+        let transcriptData = null;
+        let currentTranscriptIndex = -1;
+
+        function findTranscriptAtTime(videoTimeSeconds) {
+            if (!transcriptData) return -1;
+            const blocks = transcriptData.speaker_blocks;
+            
+            if (videoTimeSeconds < blocks[0].start_time) return 0;
+
+            // Find the block that contains this video time
+            for (let i = 0; i < blocks.length; i++) {
+                // get the next section if available
+                if (i == blocks.length - 1) {
+                    // just return the last one
+                    return i;
+                }
+                const nextBlock = blocks[i + 1];
+                if (videoTimeSeconds >= blocks[i].start_time && videoTimeSeconds <= nextBlock.start_time) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        function displayTranscript(index) {
+            if (!transcriptData || index < 0 || index >= transcriptData.speaker_blocks.length) return;
+            
+            // Clear meeting details when showing transcript
+            document.getElementById('meeting-details').style.display = 'none';
+            
+            const block = transcriptData.speaker_blocks[index];
+            document.getElementById('transcript-content').innerHTML = `
+                <div class="transcript-block">
+                    <p class="words">${block.start_time}</p>
+                    <p class="speaker">${block.speaker.name}</p>
+                    <p class="words">${block.words}</p>
+                </div>
+            `;
+            currentTranscriptIndex = index;
+        }
+
+        // Handle video timeupdate event
+        video.addEventListener('timeupdate', () => {
+            const transcriptIndex = findTranscriptAtTime(video.currentTime);
+            if (transcriptIndex >= 0 && transcriptIndex !== currentTranscriptIndex) {
+                displayTranscript(transcriptIndex);
+            }
+        });
+
+        // Show meeting details when video is paused or ended
+        video.addEventListener('pause', () => {
+            document.getElementById('id_span_paused').style.display = 'inline-block';
+            document.getElementById('meeting-details').style.display = 'block';
+            document.getElementById('transcript-content').innerHTML = '';
+            currentTranscriptIndex = -1;
+        });
+
+        video.addEventListener('ended', () => {
+            document.getElementById('id_span_paused').style.display = 'none';
+            document.getElementById('meeting-details').style.display = 'block';
+            document.getElementById('transcript-content').innerHTML = '';
+            currentTranscriptIndex = -1;
+        });
+
+        fetch('event.json')
             .then(response => {
                 if (!response.ok) {
                     throw new Error('JSON file not found');
@@ -151,8 +235,18 @@
                 return response.json();
             })
             .then(data => {
+                // Convert epoch timestamps to video-relative timestamps
+                const startTime = new Date(data.start_time).getTime();
+                transcriptData = {
+                    speaker_blocks: data.transcript.speaker_blocks.map(block => ({
+                        ...block,
+                        start_time: (block.start_time - startTime) / 1000, // Convert to seconds from video start
+                        end_time: (block.end_time - startTime) / 1000
+                    }))
+                };
+
                 const detailsHtml = `
-                    <h2>${data.title}</h2>
+                    <h2><span id="id_span_paused">⏸</span>${data.title}</h2>
                     <p><strong>Date:</strong> ${new Date(data.start_time).toLocaleString()}</p>
                     <p><strong>Duration:</strong> ${Math.round((new Date(data.end_time) - new Date(data.start_time)) / 60000)} minutes</p>
                     <p><strong>Participants:</strong></p>
