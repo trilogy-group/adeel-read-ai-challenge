@@ -84,11 +84,21 @@
         .error-message a:hover {
             text-decoration: underline;
         }
+        .transcript-blocks {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px 0;
+        }
         .transcript-block {
             background: #f8f9fa;
             border-radius: 4px;
             padding: 15px;
-            margin: 10px 0;
+            transition: background-color 0.3s;
+        }
+        .transcript-block.current {
+            background: #e3f2fd;
+            border-left: 4px solid #1976d2;
         }
         .transcript-block .speaker {
             color: #2c3e50;
@@ -187,20 +197,40 @@
             return -1;
         }
 
-        function displayTranscript(index) {
-            if (!transcriptData || index < 0 || index >= transcriptData.speaker_blocks.length) return;
+        function displayAllTranscripts() {
+            if (!transcriptData) return;
             
             // Clear meeting details when showing transcript
             document.getElementById('meeting-details').style.display = 'none';
             
-            const block = transcriptData.speaker_blocks[index];
-            document.getElementById('transcript-content').innerHTML = `
-                <div class="transcript-block">
-                    <p class="words">${block.start_time}</p>
+            const blocksHtml = transcriptData.speaker_blocks.map((block, idx) => `
+                <div class="transcript-block" id="transcript-${idx}">
                     <p class="speaker">${block.speaker.name}</p>
                     <p class="words">${block.words}</p>
                 </div>
+            `).join('');
+
+            document.getElementById('transcript-content').innerHTML = `
+                <div class="transcript-blocks">${blocksHtml}</div>
             `;
+        }
+
+        function highlightTranscript(index) {
+            if (!transcriptData || index < 0 || index >= transcriptData.speaker_blocks.length) return;
+            
+            // Remove highlight from previous block
+            if (currentTranscriptIndex >= 0) {
+                const prevBlock = document.getElementById(`transcript-${currentTranscriptIndex}`);
+                if (prevBlock) prevBlock.classList.remove('current');
+            }
+
+            // Add highlight to current block
+            const currentBlock = document.getElementById(`transcript-${index}`);
+            if (currentBlock) {
+                currentBlock.classList.add('current');
+                currentBlock.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
             currentTranscriptIndex = index;
         }
 
@@ -208,7 +238,7 @@
         video.addEventListener('timeupdate', () => {
             const transcriptIndex = findTranscriptAtTime(video.currentTime);
             if (transcriptIndex >= 0 && transcriptIndex !== currentTranscriptIndex) {
-                displayTranscript(transcriptIndex);
+                highlightTranscript(transcriptIndex);
             }
         });
 
@@ -244,6 +274,7 @@
                         end_time: (block.end_time - startTime) / 1000
                     }))
                 };
+                displayAllTranscripts();
 
                 const detailsHtml = `
                     <h2><span id="id_span_paused">⏸</span>${data.title}</h2>
