@@ -118,17 +118,36 @@
             color: #d32f2f;
             margin-right: 8px;
         }
+        .toggle-view {
+            float: right;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .toggle-view:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+        .toggle-view.fixed {
+            background: rgba(25, 118, 210, 0.7);
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="video-container">
+            <span id="id_span_paused" style="display: none;"></span>
             <video controls preload="metadata">
                 <source src="meeting.mp4" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
         </div>
         <div class="transcript">
+            <h2>Meeting Transcript <button class="toggle-view" onclick="toggleView()">Auto</button></h2>
             <div id="meeting-details"></div>
             <div id="transcript-content"></div>
         </div>
@@ -179,6 +198,7 @@
         // Load and display meeting data
         let transcriptData = null;
         let currentTranscriptIndex = -1;
+        let isAutoMode = true;
 
         function findTranscriptAtTime(videoTimeSeconds) {
             if (!transcriptData) return -1;
@@ -237,10 +257,30 @@
             currentTranscriptIndex = index;
         }
 
+        function toggleView() {
+            isAutoMode = !isAutoMode;
+            const button = document.querySelector('.toggle-view');
+            button.textContent = isAutoMode ? 'Auto' : 'Fixed';
+            button.classList.toggle('fixed', !isAutoMode);
+            
+            if (!isAutoMode) {
+                // In fixed mode, always show transcript
+                document.getElementById('meeting-details').style.display = 'none';
+                document.getElementById('transcript-content').style.display = 'block';
+            } else if (video.paused) {
+                // In auto mode, respect play state
+                document.getElementById('meeting-details').style.display = 'block';
+                document.getElementById('transcript-content').style.display = 'none';
+            }
+        }
+
         // Handle video play/pause events
         video.addEventListener('play', () => {
-            document.getElementById('meeting-details').style.display = 'none';
-            document.getElementById('transcript-content').style.display = 'block';
+            document.getElementById('id_span_paused').style.display = 'none';
+            if (isAutoMode) {
+                document.getElementById('meeting-details').style.display = 'none';
+                document.getElementById('transcript-content').style.display = 'block';
+            }
         });
 
         // Handle video timeupdate event
@@ -251,17 +291,20 @@
             }
         });
 
-        // Show meeting details when video is paused or ended
         video.addEventListener('pause', () => {
             document.getElementById('id_span_paused').style.display = 'inline-block';
-            document.getElementById('meeting-details').style.display = 'block';
-            document.getElementById('transcript-content').style.display = 'none';
+            if (isAutoMode) {
+                document.getElementById('meeting-details').style.display = 'block';
+                document.getElementById('transcript-content').style.display = 'none';
+            }
         });
 
         video.addEventListener('ended', () => {
             document.getElementById('id_span_paused').style.display = 'none';
-            document.getElementById('meeting-details').style.display = 'block';
-            document.getElementById('transcript-content').style.display = 'none';
+            if (isAutoMode) {
+                document.getElementById('meeting-details').style.display = 'block';
+                document.getElementById('transcript-content').style.display = 'none';
+            }
             currentTranscriptIndex = -1;
         });
 
