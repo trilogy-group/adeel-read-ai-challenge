@@ -1,0 +1,160 @@
+Meet Meeting 
+Mon, Apr 14, 2025
+
+0:02 - Leonardo Lima start earlier or later, then we also have that full recording. I don't think they can stop the recording. I think we can stop the recording if we want to, but I don't think they can.
+
+0:14 - Pablo Fernandez We can test drive this right now if I join as a...
+
+0:18 - Leonardo Lima If you close the window. Yes, but I mean like if I join as a stranger that is not logged in, like I just did now, then I can't Stop the recording.
+
+0:32 - Unidentified Speaker I do have kids.
+
+0:36 - Pablo Fernandez Don't worry about that.
+
+0:41 - Pablo Fernandez You know, like, well, I'm divorced and the kids are on holidays with their mother. I have two weeks of Kalamazoo.
+
+1:00 - Leonardo Lima Too bad the import hasn't started yet, right? Because then you could deep dive now and then surf us later.
+
+1:07 - Pablo Fernandez Yeah, that's the thing. So I have some time to get into the things, you know. OK, good. So how do we trigger this?
+
+1:16 - Leonardo Lima We have Usman created an organizational unit that has a special Google Meet setting. So he put me in there, and we want to understand Who else? And this applies to all meetings, right? So even if I'm doing any meeting I'm hosting, I'll have these settings on, which is not bad.
+
+1:36 - Pablo Fernandez We don't want to enable this for everyone, but for mostly everyone, it should be okay.
+
+1:42 - Leonardo Lima We are creating a specific account in that organization that will be doing that.
+
+1:47 - Pablo Fernandez Yeah, it's called an OU, Organizational Unit. Yeah. Inside that, you need an account.
+
+1:53 - Unidentified Speaker No, it's my account.
+
+1:54 - Pablo Fernandez moved your account there?
+
+1:56 - Unidentified Speaker Yes.
+
+1:57 - Unidentified Speaker Okay.
+
+1:58 - Pablo Fernandez And why we cannot create an alias? We don't need to. That's what I'm working on.
+
+2:07 - Leonardo Lima So what I have now is that whenever a meeting arrives, it generates a Google chat message, adds to DynamoDB, saves the raw on XO, it also adds to the sheet, and then the transcript and session information on Google Drive. So it does all of these five things. Does it have a UI for the schedule?
+
+2:35 - Pablo Fernandez You're taking the session ID, like the column E?
+
+2:38 - Leonardo Lima I didn't get there yet.
+
+2:40 - Pablo Fernandez I will get there soon. I created a unique...
+
+2:44 - Leonardo Lima Yeah, I saw that. Yeah, I saw. Ideally, these would be on the... Here, like I said, session ID, review tracker one. And I want to see where this shows up. So I'm testing with their webhook test, so let's see if this one goes to my webhook as well.
+
+3:03 - Pablo Fernandez But if you control the creation of the meeting, you can put it, I guess, in a few places.
+
+3:10 - Leonardo Lima Yes, as well, exactly.
+
+3:12 - Leonardo Lima So what we created was a UI. I don't know. I didn't yet. I'm still debugging. Just literally 10 minutes ago, I finished testing the Google creation. So there is a video here that shows how we have a UI that you can... So we have a session. The idea is that they type in the session IDs, SME name, their email, they pick a date and time for this to be scheduled, and then with their time zone, likely, and then what time zone it's in there, and then they schedule a meeting duration, and when it's scheduled, it will schedule a session on my calendar that is exclusive for this, and then we can share this calendar amongst all of us, so we can see all the sessions And this will send them an invite link. That is going to show my name. I saw that you did some auth.
+
+4:19 - Pablo Fernandez I know the auth is on the server side here. The person is logged in? No, no, it's not. No, this is a web page.
+
+4:29 - Leonardo Lima Anyone can go to this URL. I can go now if I want to.
+
+4:34 - Pablo Fernandez The link to the meeting is going to be in the spreadsheet.
+
+4:39 - Leonardo Lima Exactly. And also to the calendar invite, right? So if I say, Review Tracker 1. Ah, because we have the email of the SME in the spreadsheet. Yeah, so for example, Pablo, and then it gets your name, and then I'll use your name, Pablo. We can see that.
+
+4:56 - Pablo Fernandez Well, we also are supposed to get it in the spreadsheet, but maybe the person hasn't assigned it.
+
+5:02 - Leonardo Lima Yeah, so let's say Pablo at the factory.com. Oh, actually, this has to be an So it's Pablo Fernandez at devfactory.com. And you can pick a date and time. I have Trilogy. I'm not sure I have DevFactory.
+
+5:16 - Unidentified Speaker Oh, Trilogy? Okay.
+
+5:17 - Leonardo Lima That's fine.
+
+5:18 - Leonardo Lima Trilogy, we select Eastern time zone. There are some, oh, there's too few time zones, I guess. Or maybe not. That should be fine. And then I see if I want 90 minutes in the scheduled meeting, you should get an invite for the April 13th or 17th at noon, America, New York. Not yet, I guess from you.
+
+5:42 - Pablo Fernandez Yes, and then it shows on my calendar now.
+
+5:45 - Leonardo Lima What I'll change is that I want this to be on a shared calendar, this imports dev, so that we can then I can just give this URL of this calendar to everyone so you can everyone follow along. And then if, oh, I want to join that session, then you join that session if you want to. Another thing we can do is announce that the meeting is scheduled and the meeting is started or whatever on Google Chat as well. So then we can try to follow along. I don't know if that's just for now. We can start this meeting ID, which, oh, there is no meeting. The meeting link is not being created.
+
+6:28 - Pablo Fernandez Okay, let me write this down.
+
+6:30 - Pablo Fernandez It's missing the... Yeah, I'll fix all of this quickly.
+
+6:34 - Leonardo Lima Quickly, no, soon. You know what? Meeting link's not being created. Okay. On shared calendar. And the page that you show me there, it's a test?
+
+6:44 - Pablo Fernandez Or is it something that we can already put in the instructions for the SMEs? I mean... For now, it's a test.
+
+6:52 - Leonardo Lima We can name it whatever and register domain.trilogy.com. So that's better than just a meeting scanner.
+
+6:58 - Pablo Fernandez I mean, I guess I don't know the final decision, but like the buy decision is about to be pending. Yeah. So, I mean, I guess we have until end of week to basically close this. You know what I mean? Yeah.
+
+7:13 - Leonardo Lima So that's why I'm going with this as fast as I can. So I will do this final last minute changes, like We have to make sure this is all correct. And then I'll add, so I wrote three things and then we go from there. That is great.
+
+7:30 - Pablo Fernandez I mean, as I started, it's fantastic. And it's going to, uh, to resolve quite a few things. I just see a bit of, um, complication with the time zone that people get confused, you know, like, I guess they know the time zone.
+
+7:45 - Leonardo Lima Hopefully. Yes. That's why we could try and extract the time zone from their current computer, but I don't know. We can. Already adding stuff, right? Yeah. No, no, no.
+
+7:54 - Pablo Fernandez I would, I would leave it like that as a first version. And then we add whatever is the most important thing that we think is going to help. No, I think that's great. And it makes the process quite clear. I can remove the copy and paste links and stuff.
+
+8:11 - Leonardo Lima And you know. That's another advance that we can try and do. Because this is an HTML page now. If we migrate this, outside, what we can do is you can add a link here. Schedule, yeah.
+
+8:25 - Unidentified Speaker Schedule, where is it again?
+
+8:27 - Leonardo Lima Here is schedule. That would be the link filled with the session ID already filled.
+
+8:34 - Pablo Fernandez If we can have a parameter or something that gives the session ID and even the email, I mean. Well, the email would mean that they fill it.
+
+8:46 - Leonardo Lima I think they don't need to feel that here. Or if they do select it, then yes, we could do everything, but then it's a
+
+8:55 - Pablo Fernandez Yeah, but it's not an email. It's actually the person.
+
+8:58 - Leonardo Lima We don't have the email there yet. Yeah. Yeah. We can eventually, but then it's Google scripts. So maybe, maybe that's something you guys can do. Like I, I did Google apps script. I don't know, five years ago when I joined Crossover, but I have not.
+
+9:15 - Pablo Fernandez I mean, at this stage, anyways, it's going to be an LLM doing it.
+
+9:19 - Leonardo Lima Yeah, exactly.
+
+9:20 - Leonardo Lima So, but that's another area that you can try and help if you want. So, what I think it would be great is just having this ID. So, you click the session ID to schedule it. After you schedule it, I want to make that page, that lambda, to fill in the email that I need based on the email, or at least fill the email, or based on their name. And also, meeting AI. So not necessarily the Read AI link yet, but it will be the Google Meet link. After we have the meeting finished, then we can update to the Read AI link. Okay. Actually, we have the email. Okay.
+
+10:02 - Leonardo Lima Then we can also add the scheduled date as well.
+
+10:06 - Pablo Fernandez It's GDPR-restricted, the EU ones, but we'll give them you know, soon, I guess. Okay. So that's where I'm at.
+
+10:15 - Leonardo Lima So I'm still progressing. As I mentioned, I'm still testing all of this. Hopefully, everything will come to place before the actual close date, but soon. I mean, it's looking like it's going to work.
+
+10:29 - Pablo Fernandez At least this basic thing is going to work well, right? That's what I'm hoping, yeah.
+
+10:35 - Leonardo Lima There are a few security holes, but I mean, we don't really There's plenty of security holes, but the worst will happen is, well, my calendar will be flooded, and then I can just delete the calendar and shut this down. Or what else will happen? Because that's pretty much it. And then my, yeah, that's it. Because they can send invites to people they don't like, I don't know. They can DDOS this thing. Yes. But if I need to have a login, because then they need to install an app to allow me to authenticate against their Google thing, and then blah, blah, blah. So I think it's worse. But if we have time, like for tomorrow, what I can do is ask the IC that did this. I can ask him, OK, let's try and have an out with Google. So you have to have Google out. What do you need to change to enable that? And likely, this will not be an HTML5. And more now this is a single page app like, I don't know, Node.js or React or Angular. It's pure HTML?
+
+11:44 - Unidentified Speaker Yes, it's pure HTML.
+
+11:46 - Leonardo Lima What do you need? I asked it for a... So that's a pure...
+
+11:51 - Pablo Fernandez It should be a pure HTML.
+
+11:54 - Leonardo Lima If it is or not, I don't know, but it's static. So it's posted on S3. Yeah, I know, but it's good enough. I mean, that's But that's, yeah, because I would do this with a table and some divs. No, not even divs. I would, tables and HRs and- HRTDs. Yeah, exactly, so.
+
+12:15 - Pablo Fernandez Yeah, okay.
+
+12:16 - Pablo Fernandez And we don't need anything fancy.
+
+12:18 - Leonardo Lima So anyways, this is the status now. That's great.
+
+12:22 - Pablo Fernandez What I'll do is, and thanks for driving this because I couldn't understand what, you know, like where you wanted to go. Now I understand. So I'll say, I'll start updating the documentation and the instructions and stuff. I'll leave some placeholders for URLs and things like that, and I'll start adapting that so that we are ready. If you want me to test something, just let me know.
+
+12:49 - Leonardo Lima Yeah, as soon as I have the whole process set up correctly and the way that I want. I'll now test with this meeting if this meeting's webhook will be called correctly. And if not, then I have a problem. If it does, then I'll have the whole flow thing going. Because then I will schedule a meeting with myself. And then I'll just join it as a third party. Or I'll schedule a meeting with my personal eBay. I'll not join with my domain. Really, I should join. I will describe something for Kayako, for example, so I have content. And then I'll return. And then hopefully all this will work correctly. And I'll do this while recording my screen with this Mac class screen recording. I'll be narrating to you. So then it becomes like a tutorial and you can extract the documentation.
+
+13:37 - Pablo Fernandez And then we need to start moving assets, I guess, at some point.
+
+13:42 - Leonardo Lima Like the video assets.
+
+13:43 - Leonardo Lima Yeah. So the video assets, what I'm doing now is that I create a folder called Video Extracts for now. And eventually, so when I have this Lambda for the scheduler, I want to see how I can move things around. But that's like, I I think it's going to be like two days to get to that point. But for now, what will happen is the meeting will be stored in this read AI extracts folder. And then we can move that manually or automatically later. But for now, I think it should be good enough.
+
+14:18 - Pablo Fernandez If you're going to call this tomorrow, we're starting somewhere, right?
+
+14:22 - Leonardo Lima So that's my, okay, we're starting somewhere.
+
+14:24 - Leonardo Lima And I can always reprocess events because I'm storing the raw object, the raw webhook on S3. We cannot fire that again from read AI UI. But I can have a command that says process meeting and then the path to the JSON so that it will automatically reprocess everything. So it would pretend it just ended again. It will send everything. So we have like fallbacks. I have multiple fallbacks. That's what. I know this is super important. So I'm like, I have all the fallbacks I can.
+
+14:58 - Pablo Fernandez I mean, yes, because those sessions may be long. There are like 600. So if we lose something, we need to reprocess. It would be a nightmare to restart from scratch. So I mean, having plan B is a good idea.
+
+15:10 - Leonardo Lima Yeah. So everything is kind of, OK, we have two fallbacks for everything. All right. I'll let you go now. And I'll update you as soon as I have something.
+
+15:20 - Pablo Fernandez OK. Thanks, Leo. Bye.

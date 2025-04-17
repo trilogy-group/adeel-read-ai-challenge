@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Playback</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+        .video-container {
+            width: 100%;
+            max-height: 100%;
+        }
+        video {
+            width: 100%;
+            max-height: 100%;
+            background: #000;
+        }
+        .transcript {
+            border-left: 1px solid #ccc;
+            padding-left: 20px;
+            overflow-y: auto;
+            height: 100%;
+            padding-right: 20px;
+        }
+        #meeting-details {
+            margin-bottom: 30px;
+        }
+        #meeting-details h2 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        #meeting-details h3 {
+            color: #34495e;
+            margin-top: 25px;
+        }
+        #meeting-details p {
+            line-height: 1.6;
+        }
+        #meeting-details ul {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        #meeting-details li {
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+        .error-message {
+            background: #fff3f3;
+            border: 1px solid #ffcdd2;
+            border-radius: 4px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .error-message h2 {
+            color: #d32f2f;
+            margin-top: 0;
+        }
+        .error-message code {
+            background: #ffebee;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .error-message ol {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        .error-message li {
+            margin: 8px 0;
+        }
+        .error-message a {
+            color: #1976d2;
+            text-decoration: none;
+        }
+        .error-message a:hover {
+            text-decoration: underline;
+        }
+        .transcript-blocks {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px 0;
+        }
+        .transcript-block {
+            background: #f8f9fa;
+            border-radius: 4px;
+            padding: 15px;
+            transition: background-color 0.3s;
+            cursor: pointer;
+        }
+        .transcript-block:hover {
+            background: #e3f2fd;
+        }
+        .transcript-block.current {
+            background: #e3f2fd;
+            border-left: 4px solid #1976d2;
+        }
+        .transcript-block .speaker {
+            color: #2c3e50;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+        }
+        .transcript-block .words {
+            margin: 0;
+            line-height: 1.5;
+        }
+        #id_span_paused {
+            display: none;
+            color: #d32f2f;
+            margin-right: 8px;
+        }
+        .toggle-view {
+            float: right;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .toggle-view:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+        .toggle-view.fixed {
+            background: rgba(25, 118, 210, 0.7);
+        }
+        .search-box {
+            display: none;
+            margin: 10px 0;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            font-size: 14px;
+        }
+        .search-box.visible {
+            display: block;
+        }
+        .transcript-block.search-match {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="video-container">
+            <span id="id_span_paused" style="display: none;"></span>
+            <video controls preload="metadata">
+                <source src="meeting.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <div class="transcript">
+            <h2>Meeting Transcript <button class="toggle-view" onclick="toggleView()">Auto</button></h2>
+            <input type="text" class="search-box" id="search-box" placeholder="Search transcript..." onkeyup="searchTranscript(event)">
+            <div id="meeting-details"></div>
+            <div id="transcript-content"></div>
+        </div>
+    </div>
+    <script>
+        // Handle video errors
+        const video = document.querySelector('video');
+        const videoSource = video.querySelector('source');
+        
+        // Check for video load errors
+        videoSource.addEventListener('error', () => {
+            document.querySelector('.transcript').innerHTML = `
+                <div class="error-message">
+                    <h2>⚠️ Video Not Found</h2>
+                    <p>The meeting recording file <code>meeting.mp4</code> is not available.</p>
+                    <p>Please:</p>
+                    <ol>
+                        <li>Download the video from: <a href="https://drive.google.com/file/d/1a9P_2lFY4RdZATZoDpjMQAqK_KLrRRpH/view?usp=sharing" target="_blank">Google Drive</a></li>
+                        <li>Save it as <code>meeting.mp4</code> in this directory</li>
+                        <li>Refresh this page</li>
+                    </ol>
+                </div>
+            `;
+        });
+
+        // Additional check for missing video file
+        fetch(videoSource.src)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Video file not found');
+                }
+            })
+            .catch(() => {
+                document.querySelector('.transcript').innerHTML = `
+                    <div class="error-message">
+                        <h2>⚠️ Video Not Found</h2>
+                        <p>The meeting recording file <code>meeting.mp4</code> is not available.</p>
+                        <p>Please:</p>
+                        <ol>
+                            <li>Download the video from: <a href="https://drive.google.com/file/d/1a9P_2lFY4RdZATZoDpjMQAqK_KLrRRpH/view?usp=sharing" target="_blank">Google Drive</a></li>
+                            <li>Save it as <code>meeting.mp4</code> in this directory</li>
+                            <li>Refresh this page</li>
+                        </ol>
+                    </div>
+                `;
+            });
+
+        // Load and display meeting data
+        let transcriptData = null;
+        let currentTranscriptIndex = -1;
+        let isAutoMode = true;
+        let isSearching = false;
+
+        function findTranscriptAtTime(videoTimeSeconds) {
+            if (!transcriptData) return -1;
+            const blocks = transcriptData.speaker_blocks;
+            
+            if (videoTimeSeconds < blocks[0].start_time) return 0;
+
+            // Find the block that contains this video time
+            for (let i = 0; i < blocks.length; i++) {
+                // get the next section if available
+                if (i == blocks.length - 1) {
+                    // just return the last one
+                    return i;
+                }
+                const nextBlock = blocks[i + 1];
+                if (videoTimeSeconds >= blocks[i].start_time && videoTimeSeconds <= nextBlock.start_time) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        function displayAllTranscripts() {
+            if (!transcriptData) return;
+            
+            const blocksHtml = transcriptData.speaker_blocks.map((block, idx) => `
+                <div class="transcript-block" id="transcript-${idx}" onclick="seekToTranscript(${idx})">
+                    <p class="speaker">${block.speaker.name}</p>
+                    <p class="words">${block.words}</p>
+                </div>
+            `).join('');
+
+            document.getElementById('transcript-content').innerHTML = `
+                <div class="transcript-blocks">${blocksHtml}</div>
+            `;
+            document.getElementById('transcript-content').style.display = 'none';
+            document.getElementById('meeting-details').style.display = 'block';
+        }
+
+        function highlightTranscript(index) {
+            if (!transcriptData || index < 0 || index >= transcriptData.speaker_blocks.length || isSearching) return;
+            
+            // Remove highlight from previous block
+            if (currentTranscriptIndex >= 0) {
+                const prevBlock = document.getElementById(`transcript-${currentTranscriptIndex}`);
+                if (prevBlock) prevBlock.classList.remove('current');
+            }
+
+            // Add highlight to current block
+            const currentBlock = document.getElementById(`transcript-${index}`);
+            if (currentBlock) {
+                currentBlock.classList.add('current');
+                currentBlock.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            currentTranscriptIndex = index;
+        }
+
+        function searchTranscript(event) {
+            const searchTerm = event.target.value.toLowerCase();
+            isSearching = searchTerm.length > 0;
+            
+            // Clear all highlights
+            document.querySelectorAll('.transcript-block').forEach(block => {
+                block.classList.remove('search-match');
+                block.classList.remove('current');
+            });
+            
+            if (!isSearching) return;
+
+            // Apply search highlights
+            document.querySelectorAll('.transcript-block').forEach(block => {
+                const text = block.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    block.classList.add('search-match');
+                    block.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+        }
+
+        function toggleView() {
+            isAutoMode = !isAutoMode;
+            const button = document.querySelector('.toggle-view');
+            const searchBox = document.getElementById('search-box');
+            button.textContent = isAutoMode ? 'Auto' : 'Fixed';
+            button.classList.toggle('fixed', !isAutoMode);
+            searchBox.classList.toggle('visible', !isAutoMode);
+            
+            if (!isAutoMode) {
+                // In fixed mode, always show transcript
+                document.getElementById('meeting-details').style.display = 'none';
+                document.getElementById('transcript-content').style.display = 'block';
+            } else {
+                // Clear search when switching back to auto
+                searchBox.value = '';
+                searchTranscript({ target: searchBox });
+                if (video.paused) {
+                    document.getElementById('meeting-details').style.display = 'block';
+                    document.getElementById('transcript-content').style.display = 'none';
+                }
+            }
+        }
+
+        // Handle video play/pause events
+        video.addEventListener('play', () => {
+            document.getElementById('id_span_paused').style.display = 'none';
+            if (isAutoMode) {
+                document.getElementById('meeting-details').style.display = 'none';
+                document.getElementById('transcript-content').style.display = 'block';
+            }
+        });
+
+        // Handle video timeupdate event
+        video.addEventListener('timeupdate', () => {
+            const transcriptIndex = findTranscriptAtTime(video.currentTime);
+            if (transcriptIndex >= 0 && transcriptIndex !== currentTranscriptIndex) {
+                highlightTranscript(transcriptIndex);
+            }
+        });
+
+        video.addEventListener('pause', () => {
+            document.getElementById('id_span_paused').style.display = 'inline-block';
+            if (isAutoMode) {
+                document.getElementById('meeting-details').style.display = 'block';
+                document.getElementById('transcript-content').style.display = 'none';
+            }
+        });
+
+        video.addEventListener('ended', () => {
+            document.getElementById('id_span_paused').style.display = 'none';
+            if (isAutoMode) {
+                document.getElementById('meeting-details').style.display = 'block';
+                document.getElementById('transcript-content').style.display = 'none';
+            }
+            currentTranscriptIndex = -1;
+        });
+
+        function seekToTranscript(index) {
+            if (!transcriptData || index < 0 || index >= transcriptData.speaker_blocks.length) return;
+            
+            const block = transcriptData.speaker_blocks[index];
+            const seekTime = Math.max(0, block.start_time - 2); // Go back 2 seconds
+            video.currentTime = seekTime;
+            
+            if (video.paused) {
+                video.play();
+            }
+        }
+
+        fetch('event.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('JSON file not found');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Convert epoch timestamps to video-relative timestamps
+                const startTime = new Date(data.start_time).getTime();
+                transcriptData = {
+                    speaker_blocks: data.transcript.speaker_blocks.map(block => ({
+                        ...block,
+                        start_time: (block.start_time - startTime) / 1000, // Convert to seconds from video start
+                        end_time: (block.end_time - startTime) / 1000
+                    }))
+                };
+                displayAllTranscripts();
+
+                const detailsHtml = `
+                    <h2><span id="id_span_paused">⏸</span>${data.title}</h2>
+                    <p><strong>Date:</strong> ${new Date(data.start_time).toLocaleString()}</p>
+                    <p><strong>Duration:</strong> ${Math.round((new Date(data.end_time) - new Date(data.start_time)) / 60000)} minutes</p>
+                    <p><strong>Participants:</strong></p>
+                    <ul>
+                        ${data.participants.map(p => `<li>${p.name}</li>`).join('')}
+                    </ul>
+                    <h3>Summary</h3>
+                    <p>${data.summary}</p>
+                    <h3>Action Items</h3>
+                    <ul>
+                        ${data.action_items.map(item => `<li>${item.text}</li>`).join('')}
+                    </ul>
+                `;
+                document.getElementById('meeting-details').innerHTML = detailsHtml;
+            })
+            .catch(() => {
+                document.querySelector('.transcript').innerHTML = `
+                    <div class="error-message">
+                        <h2>⚠️ Meeting Data Not Found</h2>
+                        <p>The meeting data file <code>event.json</code> is not available.</p>
+                        <p>Please ensure the file exists in this directory and refresh the page.</p>
+                    </div>
+                `;
+            });
+    </script>
+</body>
+</html>
