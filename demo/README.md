@@ -38,3 +38,7 @@ A web interface for synchronized video and transcript playback with interactive 
   - Save as `meeting.mp4` in this directory
 - `event.json`: Meeting data including transcript and metadata for the above video
 - `index.html`: The web interface
+
+## Demonstration
+
+Demonstration video: https://drive.google.com/file/d/1fNEkfHcHxHSL-p903BYlzYxQplfkV87B/view?usp=sharing
