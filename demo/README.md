@@ -1,6 +1,26 @@
 # Interactive Meeting Playback
 
-A simple web interface for synchronized video and transcript playback.
+A web interface for synchronized video and transcript playback with interactive features.
+
+## Features
+
+- **Auto Mode**:
+  - Shows meeting details when paused
+  - Displays synchronized transcript during playback
+  - Auto-scrolls to current speaker
+  - Highlights current segment
+
+- **Fixed Mode** (toggle in transcript header):
+  - Always shows full transcript
+  - Search functionality
+  - Click any segment to jump to that timestamp
+  - Orange highlights for search matches
+
+- **General Features**:
+  - Responsive layout
+  - Pause indicator
+  - Smooth transitions
+  - Meeting details view
 
 ## Setup
 
